@@ -1,23 +1,21 @@
 FROM elixir:1.6
-# This command goes no more (let the user create the project):
-#
-# RUN mkdir /application && \
-#     cd /application && \
-#     mix new . --sup --app your_application --module Your
-#
-# These commands go now:
+# We create a directory for our application to be contained
 RUN mkdir /application
+# Also we create a default script to run
+RUN echo "\$(mix run --no-halt)" > /application/start
+RUN chmod +x /application/start
+# Then we copy all the code
 COPY . /application
-# Now we force a dependencies installation for our project:
+# Now we force a dependencies installation for our project
 RUN cd /application && mix deps.get
-# And we create the run script
-RUN echo "\$(cd /application && mix run --no-halt)" > /start
-RUN chmod +x /start
-# This command goes no more (so the image has the actual code):
+# Finally we tell how to execute the start script
+WORKDIR /application
+CMD start
+###
+# Considerations for non-production environments.
 #
-# VOLUME ["/application"]
-#
-# Finally we expose the ports of our interest
-EXPOSE 80 443
-# And the default leading command will be the /start we created
-CMD /start
+# You could do the following for container in this image:
+# * bind-mount to /application to override the code in real-time.
+# * in such code, provide a different content to the start script.
+#   e.g. it including a mix deps.get call before mix run --no-halt.
+###
